@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<robot name="test" xmlns:xacro="https://wiki.ros.org/xacro">
+  <link name="body">
+    <pose>0 0 0.1 0 0 0</pose>
+    <visual>
+      <origin rpy="0 0 0" xyz="0.5 0.5 0.5"/>
+      <geometry>
+        <box size="1 1 1"/>
+      </geometry>
+    </visual>
+  </link>
+
+  <joint name="joint" type="fixed">
+    <origin xyz="0.5 0.5 1" rpq="0 0 0"/>
+    <parent link="body"/>
+    <child link="head"/>
+  </joint>
+
+  <link name="head">
+    <pose>0 0 0 0 0 0</pose>
+    <visual>
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+    <geometry>
+      <box size="0.5 0.5 0.5"/>
+    </geometry>
+    </visual>
+  </link>
+</robot>

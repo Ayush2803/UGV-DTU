@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+
+  <param name="/use_sim_time" value="true"/>
+  
+  <arg name="world" default="empty"/>
+  <arg name="paused" default="false"/>
+  <arg name="use_sim_time" default="true"/>
+  <arg name="gui" default="true"/>
+  <arg name="headless" default="false"/>
+  <arg name="debug" default="false"/>
+
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <!--arg name="world_name" value="$(find mybot_gazebo)/worlds/mybot.world"/-->
+    <arg name="world_name" value="$(find mybot_gazebo)/worlds/igvc2.world"/>
+    <arg name="paused" value="$(arg paused)"/>
+    <arg name="use_sim_time" value="$(arg use_sim_time)"/>
+    <arg name="gui" value="$(arg gui)"/>
+    <arg name="headless" value="$(arg headless)"/>
+    <arg name="debug" value="$(arg debug)"/>
+  </include>
+  
+  <param name="robot_description" command="$(find xacro)/xacro.py '$(find mybot_description)/urdf/mybot.urdf.xacro'"/>
+  <node name="mybot_spawn" pkg="gazebo_ros" type="spawn_model" output="screen" args="-urdf -param robot_description -model mybot -x -5 -y -37" />
+
+
+  <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher">
+    <param name="publish_frequency" type="double" value="30.0" />
+  </node>
+  <node pkg="joint_state_publisher" type="joint_state_publisher" name="joint_state_publisher">
+    <param name="publish_frequency" type="double" value="30.0" />
+  </node>
+  
+  <!--Run gmapping-->
+  <node pkg="gmapping" type="slam_gmapping" name="slam">
+  	<remap from="scan" to="/mybot/laser/scan"></remap>
+  	<param name="base_frame" value="base_link"></param>
+  </node>
+  
+  <!--Run AMCL-->
+  <node pkg="amcl" type="amcl" name="amcl">
+  	<remap from="scan" to="/mybot/laser/scan"></remap>
+  	<param name="use_map_topic" value="true"></param>
+  	<param name="base_frame_id" value="base_link"></param>
+  	<param name="initial_pose_x" value="-5"></param>
+  	<param name="initial_pose_y" value="-37"></param>
+  </node>
+   
+  <!--Run costmap node> 
+  <node pkg="costmap_2d" type="costmap_2d_node" name="costmap_node">
+  	
+  </node-->
+  
+  <!-- Use global planner-->
+  <node pkg="move_base" type="move_base" name="move_base">
+  	<rosparam file="$(find mybot_gazebo)/costmap_params.yaml" command="load"></rosparam>
+  	<rosparam file="$(find mybot_gazebo)/local_costmap_params.yaml" command="load"></rosparam>
+  	
+  	<rosparam file="$(find mybot_gazebo)/planner_params.yaml" command="load" ns="global_planner"></rosparam>
+  	<!--remap from="~goal" to="move_base_simple/goal"></remap-->
+  	<rosparam file="$(find mybot_gazebo)/local_planner_params.yaml" command="load"></rosparam>
+  </node>
+</launch>
